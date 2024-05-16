@@ -2,6 +2,8 @@ import axios from "axios";
 import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
+const backendUrl = process.env.REACT_APP_BACKEND_URL;
+
 const Update = () => {
   const [book, setBook] = useState({
     title: "",
@@ -24,7 +26,7 @@ const Update = () => {
     e.preventDefault();
 
     try {
-      await axios.put(`http://localhost:8800/books/${bookId}`, book);
+      await axios.put(`${backendUrl}/books/${bookId}`, book);
       navigate("/");
     } catch (err) {
       console.log(err);
