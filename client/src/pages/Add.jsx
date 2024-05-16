@@ -3,6 +3,8 @@ import React from "react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
+const backendUrl = process.env.REACT_APP_BACKEND_URL;
+
 const Add = () => {
   const [book, setBook] = useState({
     title: "",
@@ -21,7 +23,7 @@ const Add = () => {
   const handleClick = async (e) => {
     e.preventDefault();
     try {
-      await axios.post("http://localhost:8800/books", book);
+      await axios.post("${backendUrl}/books", book);
       navigate("/");
     } catch (err) {
       console.log(err);
