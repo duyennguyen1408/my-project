@@ -4,13 +4,15 @@ import { useState } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
 
+const backendUrl = process.env.REACT_APP_BACKEND_URL;
+
 const Books = () => {
   const [books, setBooks] = useState([]);
 
   useEffect(() => {
     const fetchAllBooks = async () => {
       try {
-        const res = await axios.get("http://localhost:8800/books");
+        const res = await axios.get("${backendUrl}/books");
         setBooks(res.data);
       } catch (err) {
         console.log(err);
