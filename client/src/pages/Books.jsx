@@ -12,7 +12,7 @@ const Books = () => {
   useEffect(() => {
     const fetchAllBooks = async () => {
       try {
-        const res = await axios.get("${backendUrl}/books");
+        const res = await axios.get(`${backendUrl}/books`);
         setBooks(res.data);
       } catch (err) {
         console.log(err);
