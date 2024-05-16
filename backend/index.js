@@ -7,10 +7,10 @@ app.use(cors());
 app.use(express.json());
 
 const db = mysql.createConnection({
-    host: "127.0.0.1",
-    user: "root",
-    password: "password",
-    database: "testdb",
+    host: "rds_endpoint",
+    user: "admin",
+    password: "12345678",
+    database: "group1",
 });
 db.connect((error) => {
     if (error) {
@@ -21,7 +21,7 @@ db.connect((error) => {
 });
 
 app.get("/", (req, res) => {
-    res.json("hello");
+    res.json("This is Group 1 website.");
 });
 
 app.get("/books", (req, res) => {
@@ -81,5 +81,5 @@ app.put("/books/:id", (req, res) => {
 });
 
 app.listen(8800, () => {
-    console.log("Connected to backend.");
+    console.log("Connected to backend. Port 8800.");
 });
