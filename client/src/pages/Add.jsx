@@ -23,7 +23,7 @@ const Add = () => {
   const handleClick = async (e) => {
     e.preventDefault();
     try {
-      await axios.post("${backendUrl}/books", book);
+      await axios.post(`${backendUrl}/books`, book);
       navigate("/");
     } catch (err) {
       console.log(err);
