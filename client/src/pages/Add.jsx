@@ -24,6 +24,7 @@ const Add = () => {
     e.preventDefault();
     try {
       await axios.post(`${backendUrl}/books`, book);
+      console.log(book);
       navigate("/");
     } catch (err) {
       console.log(err);
