@@ -1,22 +1,18 @@
 import express from "express";
 import mysql from "mysql";
 import cors from "cors";
-
-import multer from "multer";
 import AWS from "aws-sdk";
 import fs from "fs";
-
-// const multer = require("multer"); // For file uploads
-// const AWS = require("aws-sdk"); // For AWS S3 interaction
+import bodyParser from 'body-parser';
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-const s3 = new AWS.S3();
+app.use(bodyParser.json({ limit: '50mb' }));
+app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 
-// Configure Multer for file uploads (modify destination if needed)
-const upload = multer({ dest: "uploads/" }); // Temporary directory for uploads
+const s3 = new AWS.S3();
 
 const db = mysql.createConnection({
     host: "localhost",
@@ -48,21 +44,26 @@ app.get("/books", (req, res) => {
     });
 });
 
-app.post("/books", upload.single("cover"), (req, res) => {
+app.post("/books", (req, res) => {
     const q =
         "INSERT INTO books(`title`, `book_desc`, `price`, `cover`) VALUES (?)";
 
     let values = [req.body.title, req.body.book_desc, req.body.price];
 
     // Handle image upload to S3
-    if (req.file) {
+    if (req.body.cover) {
+        const base64Data = req.body.cover.replace(/^data:image\/\w+;base64,/, "");
+        const buffer = Buffer.from(base64Data, "base64");
+
         const params = {
             Bucket: "group-1-blog", // Replace with your S3 bucket name
-            Key: req.file.filename + "." + req.file.mimetype.split("/")[1],
-            Body: fs.createReadStream(req.file.path),
+            Key: "img/" + Date.now() + ".png",
+            Body: buffer,
+            ContentEncoding: "base64",
+            ContentType: "image/png",
+            ACL: "public-read", // Make the file publicly readable
         };
-        
-        console.log(req.file);
+
         s3.upload(params, (err, data) => {
             if (err) {
                 console.error(err);
