@@ -2,16 +2,29 @@ import express from "express";
 import mysql from "mysql";
 import cors from "cors";
 
+import multer from "multer";
+import AWS from "aws-sdk";
+import fs from "fs";
+
+// const multer = require("multer"); // For file uploads
+// const AWS = require("aws-sdk"); // For AWS S3 interaction
+
 const app = express();
 app.use(cors());
 app.use(express.json());
 
+const s3 = new AWS.S3();
+
+// Configure Multer for file uploads (modify destination if needed)
+const upload = multer({ dest: "uploads/" }); // Temporary directory for uploads
+
 const db = mysql.createConnection({
-    host: "rds_endpoint",
-    user: "admin",
-    password: "12345678",
+    host: "localhost",
+    user: "root",
+    password: "password",
     database: "group1",
 });
+
 db.connect((error) => {
     if (error) {
         console.error("Error connecting to MySQL database:", error);
@@ -35,21 +48,45 @@ app.get("/books", (req, res) => {
     });
 });
 
-app.post("/books", (req, res) => {
+app.post("/books", upload.single("cover"), (req, res) => {
     const q =
         "INSERT INTO books(`title`, `book_desc`, `price`, `cover`) VALUES (?)";
 
-    const values = [
-        req.body.title,
-        req.body.book_desc,
-        req.body.price,
-        req.body.cover,
-    ];
+    let values = [req.body.title, req.body.book_desc, req.body.price];
 
-    db.query(q, [values], (err, data) => {
-        if (err) return res.send(err);
-        return res.json(data);
-    });
+    // Handle image upload to S3
+    if (req.file) {
+        const params = {
+            Bucket: "group-1-blog", // Replace with your S3 bucket name
+            Key: req.file.filename + "." + req.file.mimetype.split("/")[1],
+            Body: fs.createReadStream(req.file.path),
+        };
+        
+        console.log(req.file);
+        s3.upload(params, (err, data) => {
+            if (err) {
+                console.error(err);
+                return res.status(500).send("Error uploading image to S3");
+            }
+
+            // Update cover URL with the uploaded image location
+            values.push(data.Location);
+
+            // Insert data into database with updated cover URL
+            db.query(q, [values], (err, data) => {
+                if (err) return res.send(err);
+                return res.json(data);
+            });
+        });
+    } else {
+        // Handle case where no image is uploaded (set cover to null or default)
+        values.push(null); // Or your default cover value
+
+        db.query(q, [values], (err, data) => {
+            if (err) return res.send(err);
+            return res.json(data);
+        });
+    }
 });
 
 app.delete("/books/:id", (req, res) => {
