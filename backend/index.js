@@ -50,9 +50,15 @@ app.post("/books", (req, res) => {
 
     let values = [req.body.title, req.body.book_desc, req.body.price];
 
+    // Your CloudFront distribution domain
+    const cloudFrontDomain = "https://d1idlrw0osxj8u.cloudfront.net/";
+
     // Handle image upload to S3
     if (req.body.cover) {
-        const base64Data = req.body.cover.replace(/^data:image\/\w+;base64,/, "");
+        const base64Data = req.body.cover.replace(
+            /^data:image\/\w+;base64,/,
+            ""
+        );
         const buffer = Buffer.from(base64Data, "base64");
 
         const params = {
@@ -70,8 +76,11 @@ app.post("/books", (req, res) => {
                 return res.status(500).send("Error uploading image to S3");
             }
 
-            // Update cover URL with the uploaded image location
-            values.push(data.Location);
+            // Construct CloudFront URL
+            const cloudFrontUrl = cloudFrontDomain + params.Key;
+
+            // Update cover URL with the CloudFront URL
+            values.push(cloudFrontUrl);
 
             // Insert data into database with updated cover URL
             db.query(q, [values], (err, data) => {
